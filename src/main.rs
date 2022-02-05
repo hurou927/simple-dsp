@@ -1,3 +1,5 @@
+mod rtb_model;
+
 use axum::{
     body::{Body, Bytes},
     extract::Path,
@@ -10,6 +12,9 @@ use axum::{
 };
 use std::{net::SocketAddr, string::FromUtf8Error};
 use tracing::Level;
+
+use crate::rtb_model::Video;
+
 
 #[tokio::main]
 async fn main() {
@@ -39,6 +44,7 @@ fn decode_body(body: &Bytes) -> Result<String, FromUtf8Error> {
 
 async fn handler(Path(any): Path<String>, body: Bytes) -> Response<Body> {
     let b = decode_body(&body).unwrap();
+    let _v = Video{};
     tracing::error!("path: {}, b: {}", any, b);
 
     let body = b;
