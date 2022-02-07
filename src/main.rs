@@ -1,20 +1,23 @@
 mod rtb_model;
+mod resource_selector;
 
+use crate::rtb_model::Video;
 use axum::{
     body::{Body, Bytes},
-    extract::Path,
-    http::{
-        header,
-        HeaderValue, Response, StatusCode,
-    },
+    extract::{Path, Extension},
+    http::{header, HeaderValue, Response, StatusCode},
     routing::any,
-    Router,
+    AddExtensionLayer, Router,
 };
+use std::sync::Arc;
 use std::{net::SocketAddr, string::FromUtf8Error};
 use tracing::Level;
 
-use crate::rtb_model::Video;
 
+struct AppConfig {
+    // resource_conf: resource_selector::Conf,
+    d: i32
+}
 
 #[tokio::main]
 async fn main() {
@@ -26,8 +29,11 @@ async fn main() {
         .finish();
     tracing::subscriber::set_global_default(collector).unwrap();
 
+    let state = Arc::new(AppConfig { d: 1 });
     // build our application with a route
-    let app = Router::new().route("/*any", any(handler));
+    let app = Router::new()
+        .route("/*any", any(handler))
+        .layer(AddExtensionLayer::new(state));
 
     // run it
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
@@ -42,9 +48,9 @@ fn decode_body(body: &Bytes) -> Result<String, FromUtf8Error> {
     String::from_utf8(body.to_vec())
 }
 
-async fn handler(Path(any): Path<String>, body: Bytes) -> Response<Body> {
+async fn handler(Path(any): Path<String>, body: Bytes, Extension(state): Extension<Arc<AppConfig>>) -> Response<Body> {
     let b = decode_body(&body).unwrap();
-    let _v = Video{};
+    let _v = Video {};
     tracing::error!("path: {}, b: {}", any, b);
 
     let body = b;
