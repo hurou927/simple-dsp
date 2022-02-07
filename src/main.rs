@@ -1,5 +1,6 @@
 mod rtb_model;
 mod resource_selector;
+mod app_conf;
 
 use crate::rtb_model::Video;
 use axum::{
