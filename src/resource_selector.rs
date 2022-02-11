@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
-use crate::rtb_model::{Imp, Request};
+use crate::{rtb_model::{Imp, Request}, app_conf::ImpCondition};
 
 pub struct ImpInfo {
     pub imp_id: String,
@@ -14,15 +14,6 @@ impl From<&Imp> for ImpInfo {
         }
     }
 }
-
-#[derive(Serialize_repr, Deserialize_repr, PartialEq, Debug)]
-#[repr(u8)]
-pub enum ImpCondition {
-    NativeVideo = 1,
-    NativeImage = 2,
-    Video = 3,
-}
-
 
 impl ImpCondition {
     pub fn apply(&self, request: &Request) -> Option<ImpInfo> {
@@ -70,13 +61,4 @@ fn is_native_image(imp: &Imp) -> bool {
     }
 }
 
-#[derive(Deserialize, PartialEq, Debug)]
-pub struct Resource {
-    pub path: String,
-    pub imp_cond: ImpCondition,
-}
 
-#[derive(Deserialize, PartialEq, Debug)]
-pub struct Conf {
-    pub resources: Vec<Resource>,
-}
