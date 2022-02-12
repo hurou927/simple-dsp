@@ -65,7 +65,7 @@ fn build_response(status: StatusCode) -> Response<Body> {
 
 async fn handler(
     uri: Uri,
-    Path(any): Path<String>,
+    // Path(any): Path<String>,
     body_bytes: Bytes,
     Extension(app_conf): Extension<Arc<app_conf::AppConf>>,
 ) -> Response<Body> {
@@ -80,10 +80,10 @@ async fn handler(
         }
     };
 
-    let resource = match app_conf.resources.iter().find(|x| x.uri == any) {
+    let resource = match app_conf.resources.iter().find(|x| x.uri == uri.path()) {
         Some(resource) => resource,
         None => {
-            tracing::warn!("not found path. uri: {}", any);
+            tracing::warn!("not found path. uri: {}", uri);
             return build_response(StatusCode::NO_CONTENT);
         }
     };
