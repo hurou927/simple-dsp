@@ -2,14 +2,11 @@ mod app_conf;
 mod resource_selector;
 mod rtb_model;
 
-use crate::{
-    app_conf::AppConf,
-    rtb_model::Request,
-};
+use crate::{app_conf::AppConf, rtb_model::Request};
 use axum::{
     body::{Body, Bytes},
-    extract::{Extension, Path},
-    http::{header, HeaderValue, Response, StatusCode, Uri},
+    extract::Extension,
+    http::{header, HeaderValue, Response, StatusCode, Uri, HeaderMap},
     routing::any,
     AddExtensionLayer, Router,
 };
@@ -67,10 +64,11 @@ async fn handler(
     uri: Uri,
     // Path(any): Path<String>,
     body_bytes: Bytes,
+    headers: HeaderMap,
     Extension(app_conf): Extension<Arc<app_conf::AppConf>>,
 ) -> Response<Body> {
     let body = decode_body(&body_bytes).unwrap();
-    tracing::info!("uri: {}, body: {}", uri, body);
+    tracing::info!("uri: {}, body: {}, header: {:?}", uri, body, headers);
 
     let request: Request = match serde_json::from_str(&body) {
         Ok(req) => req,
