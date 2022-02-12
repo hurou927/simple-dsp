@@ -20,7 +20,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let port = 3000;
     let app_conf_path = "./config.yml";
 
-    let file_appender = tracing_appender::rolling::daily("logs", "app.log");
+    let file_appender = tracing_appender::rolling::never("logs", "app.log");
     let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
     let collector = tracing_subscriber::fmt()
         .with_writer(non_blocking)
