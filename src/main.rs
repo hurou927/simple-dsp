@@ -4,7 +4,7 @@ mod rtb_model;
 
 use crate::{
     app_conf::AppConf,
-    rtb_model::{Request, Video},
+    rtb_model::Request,
 };
 use axum::{
     body::{Body, Bytes},

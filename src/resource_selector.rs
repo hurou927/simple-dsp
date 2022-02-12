@@ -1,8 +1,5 @@
-use serde::Deserialize;
-use serde_repr::{Deserialize_repr, Serialize_repr};
-
 use crate::{
-    app_conf::ImpCondition,
+    app_conf::{ImpCondition, ResResource},
     rtb_model::{Imp, Request},
 };
 
@@ -20,7 +17,7 @@ impl From<&Imp> for ImpInfo {
 }
 
 impl ImpCondition {
-    pub fn apply(&self, request: &Request) -> Option<ImpInfo> {
+    fn apply(&self, request: &Request) -> Option<ImpInfo> {
         match self {
             Self::NativeVideo => request
                 .imp
@@ -77,4 +74,20 @@ pub fn select_resource_with_replacing_macro(
         tracing::info!("detected imp_info. {:?}", imp_info);
         replace_macro(&resource.content, &imp_info)
     })
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn replace() {
+        let imp_info = ImpInfo {
+            imp_id: String::from("imp_id")
+        };
+        assert_eq!(
+            replace_macro(r#"{"id": "$[XX_IMP_ID]", "id": "$[XX_IMP_ID]"}"#, &imp_info),
+            r#"{"id": "imp_id", "id": "imp_id"}"#);
+    }
 }
