@@ -1,5 +1,9 @@
 watch:
+	cargo watch --ignore 'logs/*' -x 'check --'
+
+watch:
 	cargo watch --ignore 'logs/*' -x 'run --'
+
 test:
 	cargo test
 

@@ -65,7 +65,7 @@ async fn handler(
     Extension(app_conf): Extension<Arc<app_conf::AppConf>>,
 ) -> Response<Body> {
     let body = decode_body(&body_bytes).unwrap();
-    tracing::error!("uri: {}, body: {}", uri, body);
+    tracing::info!("uri: {}, body: {}", uri, body);
 
     let request: Request = match serde_json::from_str(&body) {
         Ok(req) => req,
