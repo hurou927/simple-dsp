@@ -1,4 +1,5 @@
 mod app_conf;
+mod arg_option;
 mod resource_selector;
 mod rtb_model;
 
@@ -6,19 +7,18 @@ use crate::{app_conf::AppConf, rtb_model::Request};
 use axum::{
     body::{Body, Bytes},
     extract::Extension,
-    http::{header, HeaderValue, Response, StatusCode, Uri, HeaderMap, Method},
+    http::{header, HeaderMap, HeaderValue, Method, Response, StatusCode, Uri},
     routing::any,
     AddExtensionLayer, Router,
 };
+use clap::StructOpt;
 use std::{error::Error, fs::File, io::BufReader, sync::Arc};
 use std::{net::SocketAddr, string::FromUtf8Error};
 use tracing::Level;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-
-    let port = 3000;
-    let app_conf_path = "./config.yml";
+    let args = arg_option::Args::parse();
 
     let file_appender = tracing_appender::rolling::never("logs", "app.log");
     let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
@@ -28,7 +28,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .finish();
     tracing::subscriber::set_global_default(collector).unwrap();
 
-    let file = File::open(app_conf_path)?;
+    tracing::info!("args: {:?}", args);
+
+    let file = File::open(args.conf_path)?;
     let reader = BufReader::new(file);
     let raw_app_conf: app_conf::RawAppConf = serde_yaml::from_reader(reader)?;
     let app_conf = AppConf::from(&raw_app_conf);
@@ -43,7 +45,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .layer(AddExtensionLayer::new(Arc::new(app_conf.clone())));
 
     // run it
-    let addr = SocketAddr::from(([127, 0, 0, 1], port));
+    let addr = SocketAddr::from(([127, 0, 0, 1], args.port));
     println!("listening on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
@@ -64,14 +66,14 @@ fn build_response(status: StatusCode) -> Response<Body> {
 }
 
 fn build_response_with_body(body: String) -> Response<Body> {
-        return Response::builder()
+    return Response::builder()
         .status(StatusCode::OK)
         .header(
             header::CONTENT_TYPE,
             HeaderValue::from_static(mime::APPLICATION_JSON.as_ref()),
         )
         .body(Body::from(body))
-        .unwrap()
+        .unwrap();
 }
 
 async fn handler(
@@ -83,7 +85,13 @@ async fn handler(
     Extension(app_conf): Extension<Arc<app_conf::AppConf>>,
 ) -> Response<Body> {
     let body = decode_body(&body_bytes).unwrap();
-    tracing::info!("uri: {}, method: {}, body: {}, header: {:?}", uri, method, body, headers);
+    tracing::info!(
+        "uri: {}, method: {}, body: {}, header: {:?}",
+        uri,
+        method,
+        body,
+        headers
+    );
     let target_resource = match app_conf.resources.iter().find(|x| x.uri == uri.path()) {
         Some(resource) => resource,
         None => {
@@ -102,7 +110,6 @@ async fn handler(
         return build_response_with_body(target_resource.content.clone());
     }
 
-
     let request: Request = match serde_json::from_str(&body) {
         Ok(req) => req,
         Err(err) => {
@@ -110,7 +117,6 @@ async fn handler(
             return build_response(StatusCode::BAD_REQUEST);
         }
     };
-
 
     let response_content_body =
         match resource_selector::select_resource_with_replacing_macro(target_resource, &request) {
