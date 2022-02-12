@@ -1,0 +1,10 @@
+resources:
+  - path: ./resources/video.json
+    uri: /r/video
+    cond: 3
+  - path: ./resources/native_image_dummy.json
+    uri: /r/nimage
+    cond: 2
+  - path: ./resources/native_video_dummy.json
+    uri: /r/nvideo
+    cond: 1

@@ -1,0 +1,23 @@
+
+{
+  "id": "req:1234",
+  "imp": [
+    {
+      "id": "video:1",
+      "video": {}
+    },
+    {
+      "id": "native:video:1",
+      "native": {
+        "request": "{\"ver\":\"1.2\",\"assets\":[{\"id\":1,\"video\":{}},{\"id\":2,\"img\":{\"type\":1}}]}"
+      }
+    },
+    {
+      "id": "native:image:1",
+      "native": {
+        "request": "{\"ver\":\"1.2\",\"assets\":[{\"id\":2,\"img\":{\"type\":3}}]}"
+      }
+    }
+
+  ]
+}
