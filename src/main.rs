@@ -1,19 +1,21 @@
-mod rtb_model;
-mod resource_selector;
 mod app_conf;
+mod resource_selector;
+mod rtb_model;
 
-use crate::{rtb_model::{Video, Request}, app_conf::AppConf};
+use crate::{
+    app_conf::AppConf,
+    rtb_model::{Request, Video},
+};
 use axum::{
     body::{Body, Bytes},
-    extract::{Path, Extension},
+    extract::{Extension, Path},
     http::{header, HeaderValue, Response, StatusCode, Uri},
     routing::any,
     AddExtensionLayer, Router,
 };
-use std::{sync::Arc, fs::File, io::BufReader, error::Error};
+use std::{error::Error, fs::File, io::BufReader, sync::Arc};
 use std::{net::SocketAddr, string::FromUtf8Error};
 use tracing::Level;
-
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -27,7 +29,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let path = "./config.yml";
     let file = File::open(path)?;
-    let reader =BufReader::new(file);
+    let reader = BufReader::new(file);
     let raw_app_conf: app_conf::RawAppConf = serde_yaml::from_reader(reader)?;
     let app_conf = AppConf::from(&raw_app_conf);
     // build our application with a route
@@ -49,7 +51,6 @@ fn decode_body(body: &Bytes) -> Result<String, FromUtf8Error> {
     String::from_utf8(body.to_vec())
 }
 
-
 fn build_response(status: StatusCode) -> Response<Body> {
     Response::builder()
         .status(status)
@@ -57,8 +58,12 @@ fn build_response(status: StatusCode) -> Response<Body> {
         .unwrap()
 }
 
-
-async fn handler(uri: Uri, Path(any): Path<String>, body_bytes: Bytes, Extension(app_conf): Extension<Arc<app_conf::AppConf>>) -> Response<Body> {
+async fn handler(
+    uri: Uri,
+    Path(any): Path<String>,
+    body_bytes: Bytes,
+    Extension(app_conf): Extension<Arc<app_conf::AppConf>>,
+) -> Response<Body> {
     let body = decode_body(&body_bytes).unwrap();
     tracing::error!("uri: {}, body: {}", uri, body);
 
@@ -78,14 +83,20 @@ async fn handler(uri: Uri, Path(any): Path<String>, body_bytes: Bytes, Extension
         }
     };
 
-    let returned_resource = match resource_selector::select_resource_with_replacing_macro(resource, &request) {
-        Some(resource) => resource,
-        None => {
-            tracing::warn!("not found resource");
-            return build_response(StatusCode::NO_CONTENT);
-        }
-    };
-    tracing::info!("uri: {}, request: {}, response: {}", uri, body, returned_resource);
+    let returned_resource =
+        match resource_selector::select_resource_with_replacing_macro(resource, &request) {
+            Some(resource) => resource,
+            None => {
+                tracing::warn!("not found resource");
+                return build_response(StatusCode::NO_CONTENT);
+            }
+        };
+    tracing::info!(
+        "uri: {}, request: {}, response: {}",
+        uri,
+        body,
+        returned_resource
+    );
 
     Response::builder()
         .status(StatusCode::OK)

@@ -1,4 +1,3 @@
-
 use std::fs::File;
 
 use serde::Deserialize;
@@ -14,7 +13,7 @@ pub enum ImpCondition {
 
 #[derive(Deserialize, PartialEq, Debug, Clone)]
 pub struct RawAppConf {
-    pub resources: Vec<RawResource>
+    pub resources: Vec<RawResource>,
 }
 
 #[derive(Deserialize, PartialEq, Debug, Clone)]
@@ -26,38 +25,35 @@ pub struct RawResource {
 
 #[derive(Clone, Debug)]
 pub struct AppConf {
-    pub resources: Vec<Resource>
+    pub resources: Vec<ResResource>,
 }
 
 #[derive(Clone, Debug)]
-pub struct Resource {
+pub struct ResResource {
     pub uri: String,
-    pub cond: ImpCondition,
-    pub content: String
+    pub imp_condition: ImpCondition,
+    pub content: String,
 }
 
-
-
-impl From<&RawResource> for Resource{
+impl From<&RawResource> for ResResource {
     fn from(ra: &RawResource) -> Self {
-        let content = std::fs::read_to_string(&ra.path).expect(&format!("no such file. path: {}", ra.path));
-        Resource {
+        let content =
+            std::fs::read_to_string(&ra.path).expect(&format!("no such file. path: {}", ra.path));
+        ResResource {
             uri: ra.uri.clone(),
-            cond: ra.cond.clone(),
+            imp_condition: ra.cond.clone(),
             content,
         }
     }
 }
 
-impl From<&RawAppConf> for AppConf{
+impl From<&RawAppConf> for AppConf {
     fn from(ra: &RawAppConf) -> Self {
         AppConf {
-            resources: ra.resources.iter().map(|r| Resource::from(r) ).collect()
+            resources: ra.resources.iter().map(|r| ResResource::from(r)).collect(),
         }
     }
 }
-
-
 
 #[cfg(test)]
 mod tests {
@@ -70,26 +66,27 @@ mod tests {
     #[test]
     fn parse_yml() {
         let expected = RawAppConf {
-            resources: vec! [
+            resources: vec![
                 RawResource {
                     uri: String::from("/hoge/fuga"),
                     path: String::from("./aa/bb.json"),
-                    cond: ImpCondition::NativeVideo
+                    cond: ImpCondition::NativeVideo,
                 },
                 RawResource {
                     uri: String::from("/fuga/hoge"),
                     path: String::from("./cc/dd.json"),
-                    cond: ImpCondition::NativeImage
+                    cond: ImpCondition::NativeImage,
                 },
                 RawResource {
                     uri: String::from("/hoge/hoge"),
                     path: String::from("./ee/ff.json"),
-                    cond: ImpCondition::Video
-                }
-            ]
+                    cond: ImpCondition::Video,
+                },
+            ],
         };
         assert_eq!(
-            parse(r#"
+            parse(
+                r#"
 resources:
     - uri: /hoge/fuga
       path: ./aa/bb.json
@@ -100,8 +97,9 @@ resources:
     - uri: /hoge/hoge
       path: ./ee/ff.json
       cond: 3
-"#),
+"#
+            ),
             expected
-            )
+        )
     }
 }
