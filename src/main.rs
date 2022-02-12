@@ -6,7 +6,7 @@ use crate::{app_conf::AppConf, rtb_model::Request};
 use axum::{
     body::{Body, Bytes},
     extract::Extension,
-    http::{header, HeaderValue, Response, StatusCode, Uri, HeaderMap},
+    http::{header, HeaderValue, Response, StatusCode, Uri, HeaderMap, Method},
     routing::any,
     AddExtensionLayer, Router,
 };
@@ -16,6 +16,10 @@ use tracing::Level;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+
+    let port = 3000;
+    let app_conf_path = "./config.yml";
+
     let file_appender = tracing_appender::rolling::daily("logs", "app.log");
     let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
     let collector = tracing_subscriber::fmt()
@@ -24,8 +28,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .finish();
     tracing::subscriber::set_global_default(collector).unwrap();
 
-    let path = "./config.yml";
-    let file = File::open(path)?;
+    let file = File::open(app_conf_path)?;
     let reader = BufReader::new(file);
     let raw_app_conf: app_conf::RawAppConf = serde_yaml::from_reader(reader)?;
     let app_conf = AppConf::from(&raw_app_conf);
@@ -36,11 +39,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     // build our application with a route
     let app = Router::new()
-        .route("/*any", any(handler))
+        .fallback(any(handler))
         .layer(AddExtensionLayer::new(Arc::new(app_conf.clone())));
 
     // run it
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr = SocketAddr::from(([127, 0, 0, 1], port));
     println!("listening on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
@@ -60,15 +63,45 @@ fn build_response(status: StatusCode) -> Response<Body> {
         .unwrap()
 }
 
+fn build_response_with_body(body: String) -> Response<Body> {
+        return Response::builder()
+        .status(StatusCode::OK)
+        .header(
+            header::CONTENT_TYPE,
+            HeaderValue::from_static(mime::APPLICATION_JSON.as_ref()),
+        )
+        .body(Body::from(body))
+        .unwrap()
+}
+
 async fn handler(
     uri: Uri,
     // Path(any): Path<String>,
     body_bytes: Bytes,
+    method: Method,
     headers: HeaderMap,
     Extension(app_conf): Extension<Arc<app_conf::AppConf>>,
 ) -> Response<Body> {
     let body = decode_body(&body_bytes).unwrap();
-    tracing::info!("uri: {}, body: {}, header: {:?}", uri, body, headers);
+    tracing::info!("uri: {}, method: {}, body: {}, header: {:?}", uri, method, body, headers);
+    let target_resource = match app_conf.resources.iter().find(|x| x.uri == uri.path()) {
+        Some(resource) => resource,
+        None => {
+            tracing::warn!("not found path. uri: {}", uri);
+            return build_response(StatusCode::NO_CONTENT);
+        }
+    };
+    if method != Method::POST {
+        tracing::info!(
+            "ignore imp_condition since method is {}. uri: {}, request: {}, response: {}",
+            uri,
+            method,
+            body,
+            target_resource.content
+        );
+        return build_response_with_body(target_resource.content.clone());
+    }
+
 
     let request: Request = match serde_json::from_str(&body) {
         Ok(req) => req,
@@ -78,13 +111,6 @@ async fn handler(
         }
     };
 
-    let target_resource = match app_conf.resources.iter().find(|x| x.uri == uri.path()) {
-        Some(resource) => resource,
-        None => {
-            tracing::warn!("not found path. uri: {}", uri);
-            return build_response(StatusCode::NO_CONTENT);
-        }
-    };
 
     let response_content_body =
         match resource_selector::select_resource_with_replacing_macro(target_resource, &request) {
@@ -100,13 +126,5 @@ async fn handler(
         body,
         response_content_body
     );
-
-    Response::builder()
-        .status(StatusCode::OK)
-        .header(
-            header::CONTENT_TYPE,
-            HeaderValue::from_static(mime::APPLICATION_JSON.as_ref()),
-        )
-        .body(Body::from(response_content_body))
-        .unwrap()
+    build_response_with_body(response_content_body)
 }
