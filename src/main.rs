@@ -78,7 +78,7 @@ async fn handler(
         }
     };
 
-    let resource = match app_conf.resources.iter().find(|x| x.uri == uri.path()) {
+    let target_resource = match app_conf.resources.iter().find(|x| x.uri == uri.path()) {
         Some(resource) => resource,
         None => {
             tracing::warn!("not found path. uri: {}", uri);
@@ -86,8 +86,8 @@ async fn handler(
         }
     };
 
-    let returned_resource =
-        match resource_selector::select_resource_with_replacing_macro(resource, &request) {
+    let response_content_body =
+        match resource_selector::select_resource_with_replacing_macro(target_resource, &request) {
             Some(resource) => resource,
             None => {
                 tracing::warn!("not found resource");
@@ -98,7 +98,7 @@ async fn handler(
         "uri: {}, request: {}, response: {}",
         uri,
         body,
-        returned_resource
+        response_content_body
     );
 
     Response::builder()
@@ -107,6 +107,6 @@ async fn handler(
             header::CONTENT_TYPE,
             HeaderValue::from_static(mime::APPLICATION_JSON.as_ref()),
         )
-        .body(Body::from(returned_resource))
+        .body(Body::from(response_content_body))
         .unwrap()
 }
