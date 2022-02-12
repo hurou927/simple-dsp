@@ -32,10 +32,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let reader = BufReader::new(file);
     let raw_app_conf: app_conf::RawAppConf = serde_yaml::from_reader(reader)?;
     let app_conf = AppConf::from(&raw_app_conf);
+
+    for r in app_conf.resources.iter() {
+        println!("path: {}, imp_condition: {:?}", r.uri, r.imp_condition);
+    }
+
     // build our application with a route
     let app = Router::new()
         .route("/*any", any(handler))
-        .layer(AddExtensionLayer::new(app_conf.clone()));
+        .layer(AddExtensionLayer::new(Arc::new(app_conf.clone())));
 
     // run it
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
@@ -104,6 +109,6 @@ async fn handler(
             header::CONTENT_TYPE,
             HeaderValue::from_static(mime::APPLICATION_JSON.as_ref()),
         )
-        .body(Body::from(body))
+        .body(Body::from(returned_resource))
         .unwrap()
 }
