@@ -2,7 +2,7 @@ mod rtb_model;
 mod resource_selector;
 mod app_conf;
 
-use crate::{rtb_model::Video, app_conf::AppConf};
+use crate::{rtb_model::{Video, Request}, app_conf::AppConf};
 use axum::{
     body::{Body, Bytes},
     extract::{Path, Extension},
@@ -50,28 +50,43 @@ fn decode_body(body: &Bytes) -> Result<String, FromUtf8Error> {
 }
 
 
-fn no_content() -> Response<Body> {
+fn build_response(status: StatusCode) -> Response<Body> {
     Response::builder()
-        .status(StatusCode::NO_CONTENT)
+        .status(status)
         .body(Body::empty())
         .unwrap()
 }
 
 
-async fn handler(uri: Uri, Path(any): Path<String>, body: Bytes, Extension(app_conf): Extension<Arc<app_conf::AppConf>>) -> Response<Body> {
-    let b = decode_body(&body).unwrap();
-    let _v = Video {};
-    tracing::error!("path: {}, b: {}", any, b);
+async fn handler(uri: Uri, Path(any): Path<String>, body_bytes: Bytes, Extension(app_conf): Extension<Arc<app_conf::AppConf>>) -> Response<Body> {
+    let body = decode_body(&body_bytes).unwrap();
+    tracing::error!("uri: {}, body: {}", uri, body);
 
-    let _a = match app_conf.resources.iter().find(|x| x.uri == any) {
-        Some(resource) => resource,
-        None => {
-            tracing::warn!("not found path: {}", any);
-            return no_content();
+    let request: Request = match serde_json::from_str(&body) {
+        Ok(req) => req,
+        Err(err) => {
+            tracing::error!("parse failed. body: {}, err: {}", body, err);
+            return build_response(StatusCode::BAD_REQUEST);
         }
     };
 
-    let body = b;
+    let resource = match app_conf.resources.iter().find(|x| x.uri == any) {
+        Some(resource) => resource,
+        None => {
+            tracing::warn!("not found path. uri: {}", any);
+            return build_response(StatusCode::NO_CONTENT);
+        }
+    };
+
+    let returned_resource = match resource_selector::select_resource_with_replacing_macro(resource, &request) {
+        Some(resource) => resource,
+        None => {
+            tracing::warn!("not found resource");
+            return build_response(StatusCode::NO_CONTENT);
+        }
+    };
+    tracing::info!("uri: {}, request: {}, response: {}", uri, body, returned_resource);
+
     Response::builder()
         .status(StatusCode::OK)
         .header(

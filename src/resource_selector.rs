@@ -1,8 +1,9 @@
 use serde::Deserialize;
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
-use crate::{rtb_model::{Imp, Request}, app_conf::ImpCondition};
+use crate::{rtb_model::{Imp, Request}, app_conf::{ImpCondition, Resource}};
 
+#[derive(Debug)]
 pub struct ImpInfo {
     pub imp_id: String,
 }
@@ -61,4 +62,17 @@ fn is_native_image(imp: &Imp) -> bool {
     }
 }
 
+fn replace_macro(content: &str, imp_info: &ImpInfo) -> String {
+    content
+        .replace("$[XX_IMP_ID]", &imp_info.imp_id)
+}
 
+pub fn select_resource_with_replacing_macro(resource: &Resource, request: &Request) -> Option<String> {
+    resource
+        .cond
+        .apply(request)
+        .map(|imp_info| {
+            tracing::info!("detected imp_info. {:?}", imp_info);
+            replace_macro(&resource.content, &imp_info)
+        })
+}
