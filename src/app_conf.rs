@@ -35,32 +35,38 @@ pub struct ResResource {
     pub content: String,
 }
 
-impl From<&RawResource> for ResResource {
-    fn from(ra: &RawResource) -> Self {
+impl ResResource {
+    fn from(ra: &RawResource) -> Result<Self, Box<dyn Error>> {
         let content =
-            std::fs::read_to_string(&ra.path).expect(&format!("no such file. path: {}", ra.path));
-        ResResource {
+            std::fs::read_to_string(&ra.path)?;
+        Ok(ResResource {
             uri: ra.uri.clone(),
             imp_condition: ra.cond.clone(),
             content,
-        }
+        })
+
     }
 }
 
-impl From<&RawAppConf> for AppConf {
-    fn from(ra: &RawAppConf) -> Self {
-        AppConf {
-            resources: ra.resources.iter().map(|r| ResResource::from(r)).collect(),
-        }
+
+impl AppConf {
+    fn from(ra: &RawAppConf) -> Result<Self, Box<dyn Error>> {
+        ra.resources
+            .iter()
+            .map(|raw_resource| ResResource::from(raw_resource))
+            .collect::<Result<Vec<ResResource>, Box<dyn Error>>>()
+            .map(|resources| AppConf{
+                resources
+            })
     }
 }
+
 
 pub fn read_app_conf(path: &PathBuf) -> Result<AppConf, Box<dyn Error>> {
     let file = File::open(path)?;
     let reader = BufReader::new(file);
     let raw_app_conf: RawAppConf = serde_yaml::from_reader(reader)?;
-    let app_conf = AppConf::from(&raw_app_conf);
-    Ok(app_conf)
+    AppConf::from(&raw_app_conf)
 }
 
 #[cfg(test)]
