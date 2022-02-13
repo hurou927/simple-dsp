@@ -1,3 +1,5 @@
+use std::{error::Error, fs::File, io::BufReader, path::PathBuf};
+
 use serde::Deserialize;
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
@@ -10,15 +12,15 @@ pub enum ImpCondition {
 }
 
 #[derive(Deserialize, PartialEq, Debug, Clone)]
-pub struct RawAppConf {
-    pub resources: Vec<RawResource>,
+struct RawAppConf {
+    resources: Vec<RawResource>,
 }
 
 #[derive(Deserialize, PartialEq, Debug, Clone)]
-pub struct RawResource {
-    pub uri: String,
-    pub cond: ImpCondition,
-    pub path: String,
+struct RawResource {
+    uri: String,
+    cond: ImpCondition,
+    path: String,
 }
 
 #[derive(Clone, Debug)]
@@ -52,6 +54,15 @@ impl From<&RawAppConf> for AppConf {
         }
     }
 }
+
+pub fn read_app_conf(path: &PathBuf) -> Result<AppConf, Box<dyn Error>> {
+    let file = File::open(path)?;
+    let reader = BufReader::new(file);
+    let raw_app_conf: RawAppConf = serde_yaml::from_reader(reader)?;
+    let app_conf = AppConf::from(&raw_app_conf);
+    Ok(app_conf)
+}
+
 
 #[cfg(test)]
 mod tests {

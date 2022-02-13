@@ -3,7 +3,10 @@ mod arg_option;
 mod resource_selector;
 mod rtb_model;
 
-use crate::{app_conf::AppConf, rtb_model::Request};
+use crate::{
+    app_conf::{read_app_conf},
+    rtb_model::Request,
+};
 use axum::{
     body::{Body, Bytes},
     extract::Extension,
@@ -12,7 +15,7 @@ use axum::{
     AddExtensionLayer, Router,
 };
 use clap::StructOpt;
-use std::{error::Error, fs::File, io::BufReader, sync::Arc};
+use std::{error::Error, sync::Arc};
 use std::{net::SocketAddr, string::FromUtf8Error};
 use tracing::Level;
 
@@ -30,10 +33,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     tracing::info!("args: {:?}", args);
 
-    let file = File::open(args.conf_path)?;
-    let reader = BufReader::new(file);
-    let raw_app_conf: app_conf::RawAppConf = serde_yaml::from_reader(reader)?;
-    let app_conf = AppConf::from(&raw_app_conf);
+    let app_conf = read_app_conf(&args.conf_path)?;
 
     for r in app_conf.resources.iter() {
         println!("path: {}, imp_condition: {:?}", r.uri, r.imp_condition);
