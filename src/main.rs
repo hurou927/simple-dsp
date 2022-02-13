@@ -39,7 +39,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     // build our application with a route
     let app = Router::new()
-        .fallback(any(handlers::handler))
+        .fallback(any(handlers::rtb_handler))
         .layer(AddExtensionLayer::new(Arc::new(app_conf.clone())));
 
     // run it

@@ -29,7 +29,7 @@ fn build_response_with_body(body: String) -> Response<Body> {
         .unwrap();
 }
 
-pub async fn handler(
+pub async fn rtb_handler(
     uri: Uri,
     // Path(any): Path<String>,
     body_bytes: Bytes,
