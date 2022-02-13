@@ -4,11 +4,34 @@ use axum::{
     extract::Extension,
     http::{header, HeaderMap, HeaderValue, Method, Response, StatusCode, Uri},
 };
-use std::string::FromUtf8Error;
+use flate2::read::GzDecoder;
+use std::error::Error;
+use std::io::Read;
 use std::sync::Arc;
 
-fn decode_body(body: &Bytes) -> Result<String, FromUtf8Error> {
-    String::from_utf8(body.to_vec())
+fn decode_body(body: &Bytes, headers: &HeaderMap) -> Result<String, Box<dyn Error>> {
+    let content_encoding_opt = headers
+        .get(header::CONTENT_ENCODING)
+        .map(|hv| hv.to_str().ok()) // ignore to_str error
+        .flatten()
+        .map(|hv| hv.to_lowercase());
+
+    let decoded = match content_encoding_opt.as_deref() {
+        Some("identity") | None => String::from_utf8(body.to_vec())?,
+        Some("gzip") => {
+            let mut gz = GzDecoder::new(body.as_ref());
+            let mut buffer: Vec<u8> = Vec::new();
+            let decoded_size = gz.read_to_end(&mut buffer).unwrap();
+            tracing::info!("gzip decoding. size: {}", decoded_size);
+            String::from_utf8(buffer)?
+        }
+        Some(encoding) => {
+            tracing::warn!("unknown content_encoding_type. type: {}", encoding);
+            String::from_utf8(body.to_vec())?
+        }
+    };
+
+    Ok(decoded)
 }
 
 fn build_response(status: StatusCode) -> Response<Body> {
@@ -37,7 +60,7 @@ pub async fn rtb_handler(
     headers: HeaderMap,
     Extension(app_conf): Extension<Arc<AppConf>>,
 ) -> Response<Body> {
-    let body = decode_body(&body_bytes).unwrap();
+    let body = decode_body(&body_bytes, &headers).unwrap();
     tracing::info!(
         "uri: {}, method: {}, body: {}, header: {:?}",
         uri,
