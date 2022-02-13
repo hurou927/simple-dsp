@@ -1,7 +1,7 @@
 mod app_conf;
 mod arg_option;
+mod content_builder;
 mod handlers;
-mod resource_selector;
 mod rtb_model;
 
 use crate::app_conf::read_app_conf;

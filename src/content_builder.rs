@@ -64,7 +64,7 @@ fn replace_macro(content: &str, imp_info: &ImpInfo) -> String {
     content.replace("$[XX_IMP_ID]", &imp_info.imp_id)
 }
 
-pub fn select_resource_with_replacing_macro(
+pub fn build_content_with_replacing_macro(
     resource: &ResResource,
     request: &Request,
 ) -> Option<String> {

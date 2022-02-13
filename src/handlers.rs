@@ -1,4 +1,4 @@
-use crate::{app_conf::AppConf, resource_selector, rtb_model::Request};
+use crate::{app_conf::AppConf, content_builder, rtb_model::Request};
 use axum::{
     body::{Body, Bytes},
     extract::Extension,
@@ -72,7 +72,7 @@ pub async fn rtb_handler(
     };
 
     let response_content_body =
-        match resource_selector::select_resource_with_replacing_macro(target_resource, &request) {
+        match content_builder::build_content_with_replacing_macro(target_resource, &request) {
             Some(resource) => resource,
             None => {
                 tracing::warn!("not found resource");

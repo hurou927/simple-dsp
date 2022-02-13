@@ -37,17 +37,14 @@ pub struct ResResource {
 
 impl ResResource {
     fn from(ra: &RawResource) -> Result<Self, Box<dyn Error>> {
-        let content =
-            std::fs::read_to_string(&ra.path)?;
+        let content = std::fs::read_to_string(&ra.path)?;
         Ok(ResResource {
             uri: ra.uri.clone(),
             imp_condition: ra.cond.clone(),
             content,
         })
-
     }
 }
-
 
 impl AppConf {
     fn from(ra: &RawAppConf) -> Result<Self, Box<dyn Error>> {
@@ -55,12 +52,9 @@ impl AppConf {
             .iter()
             .map(|raw_resource| ResResource::from(raw_resource))
             .collect::<Result<Vec<ResResource>, Box<dyn Error>>>()
-            .map(|resources| AppConf{
-                resources
-            })
+            .map(|resources| AppConf { resources })
     }
 }
-
 
 pub fn read_app_conf(path: &PathBuf) -> Result<AppConf, Box<dyn Error>> {
     let file = File::open(path)?;
