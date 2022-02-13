@@ -11,8 +11,11 @@ use std::net::SocketAddr;
 use std::{error::Error, sync::Arc};
 use tracing::Level;
 
+static LOG_DIR: &str = "logs";
+static LOG_FILENAME: &str = "app.log";
+
 fn subscribe_tracing() {
-    let file_appender = tracing_appender::rolling::never("logs", "app.log");
+    let file_appender = tracing_appender::rolling::never(LOG_DIR, LOG_FILENAME);
     let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
     let collector = tracing_subscriber::fmt()
         .with_writer(non_blocking)

@@ -63,7 +63,6 @@ pub fn read_app_conf(path: &PathBuf) -> Result<AppConf, Box<dyn Error>> {
     Ok(app_conf)
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;

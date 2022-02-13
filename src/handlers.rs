@@ -1,8 +1,4 @@
-use crate::{
-    app_conf::{AppConf},
-    resource_selector,
-    rtb_model::Request,
-};
+use crate::{app_conf::AppConf, resource_selector, rtb_model::Request};
 use axum::{
     body::{Body, Bytes},
     extract::Extension,
