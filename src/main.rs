@@ -14,7 +14,10 @@ use tracing::Level;
 static LOG_DIR: &str = "logs";
 static LOG_FILENAME: &str = "app.log";
 
-fn subscribe_tracing() {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
+    let args = arg_option::Args::parse();
+
     let file_appender = tracing_appender::rolling::never(LOG_DIR, LOG_FILENAME);
     let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
     let collector = tracing_subscriber::fmt()
@@ -22,13 +25,7 @@ fn subscribe_tracing() {
         .with_max_level(Level::INFO)
         .finish();
     tracing::subscriber::set_global_default(collector).unwrap();
-}
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
-    let args = arg_option::Args::parse();
-
-    subscribe_tracing();
     tracing::info!("args: {:?}", args);
 
     let app_conf = read_app_conf(&args.conf_path)?;
