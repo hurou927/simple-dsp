@@ -9,6 +9,9 @@ pub enum ImpCondition {
     NativeVideo = 1,
     NativeImage = 2,
     Video = 3,
+    ImpFirst = 11,
+    ImpSecond = 12,
+    ImpThird = 13,
 }
 
 #[derive(Deserialize, PartialEq, Debug, Clone)]
