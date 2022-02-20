@@ -1,3 +1,5 @@
+# yaml-language-server: $schema=./schema/config.json
+---
 resources:
   - path: ./resources/video.json
     uri: /r/video

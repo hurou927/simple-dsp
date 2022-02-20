@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "resources": {
+      "description": "resource info",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "uri",
+          "cond"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "uri": {
+            "type": "string"
+          },
+          "cond": {
+            "type": "integer"
+          }
+        }
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    }
+  }
+}

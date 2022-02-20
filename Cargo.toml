@@ -1,5 +1,5 @@
 [package]
-name = "axum-dsp"
+name = "simple-axum-dsp"
 version = "0.1.0"
 edition = "2021"
 
