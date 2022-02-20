@@ -1,4 +1,4 @@
-use std::{error::Error, fs::File, io::BufReader, path::PathBuf};
+use std::{error::Error, fs::File, io::BufReader, path::Path};
 
 use serde::Deserialize;
 use serde_repr::{Deserialize_repr, Serialize_repr};
@@ -53,13 +53,13 @@ impl AppConf {
     fn from(ra: &RawAppConf) -> Result<Self, Box<dyn Error>> {
         ra.resources
             .iter()
-            .map(|raw_resource| ResResource::from(raw_resource))
+            .map(ResResource::from)
             .collect::<Result<Vec<ResResource>, Box<dyn Error>>>()
             .map(|resources| AppConf { resources })
     }
 }
 
-pub fn read_app_conf(path: &PathBuf) -> Result<AppConf, Box<dyn Error>> {
+pub fn read_app_conf(path: &Path) -> Result<AppConf, Box<dyn Error>> {
     let file = File::open(path)?;
     let reader = BufReader::new(file);
     let raw_app_conf: RawAppConf = serde_yaml::from_reader(reader)?;

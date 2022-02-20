@@ -22,23 +22,23 @@ fn find_imp(imp_condition: &ImpCondition, request: &Request) -> Option<ImpInfo> 
             .imp
             .iter()
             .find(|imp| is_native_video(imp))
-            .map(|imp| ImpInfo::from(imp)),
+            .map(ImpInfo::from),
 
         ImpCondition::NativeImage => request
             .imp
             .iter()
             .find(|imp| is_native_image(imp))
-            .map(|imp| ImpInfo::from(imp)),
+            .map(ImpInfo::from),
 
         ImpCondition::Video => request
             .imp
             .iter()
             .find(|imp| is_video(imp))
-            .map(|imp| ImpInfo::from(imp)),
+            .map(ImpInfo::from),
 
-        ImpCondition::ImpFirst => request.imp.get(0).map(|imp| ImpInfo::from(imp)),
-        ImpCondition::ImpSecond=> request.imp.get(1).map(|imp| ImpInfo::from(imp)),
-        ImpCondition::ImpThird => request.imp.get(2).map(|imp| ImpInfo::from(imp)),
+        ImpCondition::ImpFirst => request.imp.get(0).map(ImpInfo::from),
+        ImpCondition::ImpSecond => request.imp.get(1).map(ImpInfo::from),
+        ImpCondition::ImpThird => request.imp.get(2).map(ImpInfo::from),
     }
 }
 

@@ -7,6 +7,10 @@ run:
 test:
 	cargo test
 
+lint:
+	cargo fmt --all
+	cargo clippy
+
 req:
 	curl -sv -d @./resources/req.json localhost:3000/r/video
 	curl -sv -d @./resources/req.json localhost:3000/r/nvideo
