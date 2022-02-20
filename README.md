@@ -26,8 +26,7 @@ Use yaml
 
 resources: #array
   - path: "/path/to/response/content" # type: string. desc: resource path
-
-    uri: "/http/path" # type: string, desc: http path
+    uri: "/http/path" # type: string, desc: http path. select randomly
     cond: 1 # type: int, desc: imp_condition
 
 ```

@@ -5,6 +5,7 @@ use axum::{
     http::{header, HeaderMap, HeaderValue, Method, Response, StatusCode, Uri},
 };
 use flate2::read::GzDecoder;
+use rand::seq::IteratorRandom;
 use std::error::Error;
 use std::io::Read;
 use std::sync::Arc;
@@ -68,7 +69,15 @@ pub async fn rtb_handler(
         body,
         headers
     );
-    let target_resource = match app_conf.resources.iter().find(|x| x.uri == uri.path()) {
+
+    // Random select
+    let mut rng = rand::thread_rng();
+    let target_resource = match app_conf
+        .resources
+        .iter()
+        .filter(|x| x.uri == uri.path())
+        .choose(&mut rng)
+    {
         Some(resource) => resource,
         None => {
             tracing::warn!("not found path. uri: {}", uri);
