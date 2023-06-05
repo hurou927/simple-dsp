@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use clap::Parser;
 
 /// Simple DSP
@@ -9,5 +7,5 @@ pub struct Args {
     #[clap(short, long, default_value_t = 3000)]
     pub port: u16,
     #[clap(short, long, default_value = r"./config.yml")]
-    pub conf_path: PathBuf,
+    pub conf_path: String,
 }

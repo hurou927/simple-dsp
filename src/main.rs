@@ -8,6 +8,7 @@ use crate::app_conf::read_app_conf;
 use axum::{routing::any, AddExtensionLayer, Router};
 use clap::StructOpt;
 use std::net::SocketAddr;
+use std::path::PathBuf;
 use std::{error::Error, sync::Arc};
 use tracing::Level;
 
@@ -27,8 +28,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     tracing::subscriber::set_global_default(collector).unwrap();
 
     tracing::info!("args: {:?}", args);
-
-    let app_conf = read_app_conf(&args.conf_path)?;
+    let conf_path = shellexpand::tilde(&args.conf_path).to_string();
+    let app_conf = read_app_conf(&PathBuf::from(conf_path))?;
 
     for r in app_conf.resources.iter() {
         println!("path: {}, imp_condition: {:?}", r.uri, r.imp_condition);
