@@ -55,10 +55,10 @@ fn build_response_with_body(body: String) -> Response<Body> {
 pub async fn rtb_handler(
     uri: Uri,
     // Path(any): Path<String>,
-    body_bytes: Bytes,
     method: Method,
     headers: HeaderMap,
     Extension(app_conf): Extension<Arc<AppConf>>,
+    body_bytes: Bytes,
 ) -> Response<Body> {
     let body = decode_body(&body_bytes, &headers).unwrap();
     tracing::info!(

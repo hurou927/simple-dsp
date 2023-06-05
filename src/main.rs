@@ -5,7 +5,8 @@ mod handlers;
 mod rtb_model;
 
 use crate::app_conf::read_app_conf;
-use axum::{routing::any, AddExtensionLayer, Router};
+use axum::Extension;
+use axum::{routing::any, Router};
 use clap::StructOpt;
 use std::net::SocketAddr;
 use std::path::PathBuf;
@@ -38,7 +39,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // build our application with a route
     let app = Router::new()
         .fallback(any(handlers::rtb_handler))
-        .layer(AddExtensionLayer::new(Arc::new(app_conf.clone())));
+        .layer(Extension(Arc::new(app_conf.clone())));
 
     // run it
     let addr = SocketAddr::from(([127, 0, 0, 1], args.port));
