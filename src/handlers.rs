@@ -13,8 +13,7 @@ use std::sync::Arc;
 fn decode_body(body: &Bytes, headers: &HeaderMap) -> Result<String, Box<dyn Error>> {
     let content_encoding_opt = headers
         .get(header::CONTENT_ENCODING)
-        .map(|hv| hv.to_str().ok()) // ignore to_str error
-        .flatten()
+        .and_then(|hv| hv.to_str().ok())
         .map(|hv| hv.to_lowercase());
 
     let decoded = match content_encoding_opt.as_deref() {

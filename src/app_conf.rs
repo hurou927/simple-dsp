@@ -40,7 +40,7 @@ pub struct ResResource {
 
 impl ResResource {
     fn from(ra: &RawResource) -> Result<Self, Box<dyn Error>> {
-        let content = std::fs::read_to_string(&ra.path)?;
+        let content = std::fs::read_to_string(shellexpand::tilde(&ra.path).as_ref())?;
         Ok(ResResource {
             uri: ra.uri.clone(),
             imp_condition: ra.cond.clone(),
