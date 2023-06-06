@@ -1,0 +1,31 @@
+[tasks.watch]
+command = "cargo"
+args = ["watch", "--ignore", "logs/*", "-x", "check --"]
+
+[tasks.run]
+env = { "RUST_LOG" = "info" }
+command = "cargo"
+args = ["watch", "--ignore", "logs/*", "-x", "run --"]
+
+[tasks.test]
+command = "cargo"
+args = ["test"]
+
+[tasks.lint]
+script = '''
+#!/bin/bash
+
+cargo fmt --all
+cargo clippy
+'''
+
+[tasks.req]
+script = '''
+#!/bin/bash
+
+curl -sv -d @./resources/req.json localhost:3000/r/video
+curl -sv -d @./resources/req.json localhost:3000/r/nvideo
+curl -sv -d @./resources/req.json localhost:3000/r/nimage
+curl -sv -X GET localhost:3000/r/nvideo
+cat ./resources/req.json | gzip | curl -sv --data-binary @- -H "Content-Encoding: gzip" localhost:3000/r/nimage
+'''
