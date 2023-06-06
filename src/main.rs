@@ -7,7 +7,7 @@ mod rtb_model;
 use crate::app_conf::read_app_conf;
 use axum::Extension;
 use axum::{routing::any, Router};
-use clap::StructOpt;
+use clap::Parser;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::{error::Error, sync::Arc};
